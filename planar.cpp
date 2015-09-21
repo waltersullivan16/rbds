@@ -7,7 +7,7 @@
 #include <queue>   
 #include <thread>
 #include <mutex>
-#define MAX_THREADS 24 
+#define MAX_THREADS 1 
 using namespace std;
 using namespace boost;
 std::mutex m;
@@ -98,8 +98,9 @@ vector<vector<int> > *changeGraf(vector<vector<int> > *graf,int blue, int red){
   }
   return res;
 }
-bool visited[20];
 int minPath(int start, int end, vector<vector<int> > *graf){
+  bool visited[20];
+  for (int j = 0; j<20;j++) visited[j]=false;
   queue<pair<int,int> >q;
   q.push(make_pair(start,0));
   visited[start] = true;
@@ -108,7 +109,7 @@ int minPath(int start, int end, vector<vector<int> > *graf){
     q.pop();
     visited[p.first]=true;
     if(p.first==end) return p.second;
-    for(int i=0;i<graf[p.first].size();i++){
+    for(int i=0;i<(*graf)[p.first].size();i++){
       if (!visited[(*graf)[p.first][i]]){
         q.push(make_pair((*graf)[p.first][i],p.second+1));
       }
@@ -119,11 +120,10 @@ int minPath(int start, int end, vector<vector<int> > *graf){
 
 }
 bool checkPath(vector<vector<int> > *graf, int blue, int red, int otoczka){
+  vector<vector<int> > *graf2;
   for (int i =0; i<red; i++){
-    vector<vector<int> > *graf2 = changeGraf(graf,blue,red);
-    for (int j = 0; j<20;j++) visited[j]=false;
+    graf2 = changeGraf(graf,blue,red);
     int path1 = minPath(0,i+blue,graf2);
-    for (int j = 0; j<20;j++) visited[j]=false;
     int path2 = minPath(i+blue,otoczka/2,graf2);
     delete graf2;
     if (path1+path2>4){
@@ -193,8 +193,9 @@ bool rule12(vector<vector<int> > *graf, int blue, int red, int otoczka) {
 
 bool check(vector<vector<int> > *graf, int blue, int red, int otoczka) {
   if (rule12(graf,blue,red,otoczka) 
-      &&allRed(graf,blue,red)&&checkPath(graf,blue,red,otoczka) &&
-      checkPlanar(graf,blue,red)) 
+     &&allRed(graf,blue,red)&&checkPath(graf,blue,red,otoczka) 
+      &&checkPlanar(graf,blue,red)
+      ) 
     return true;
   else return false;
 }	
@@ -211,15 +212,14 @@ vector<vector<vector<int> > > tworzOtoczke(int blue, int red, int otoczka){
     for(int i2 = 0;i2< doOtoczki.size();i2++){
       for(int i3 = 0;i3< doOtoczki.size();i3++){
         for(int i4 = 0;i4< doOtoczki.size();i4++){
-          vector<vector<int> > *g;
-          g->push_back(merger(otoczkaa[0],doOtoczki[i1]));
-          g->push_back(merger(otoczkaa[1],doOtoczki[i2]));
-          g->push_back(merger(otoczkaa[2],doOtoczki[i3]));
-          g->push_back(merger(otoczkaa[3],doOtoczki[i4]));
-          if (checkPlanar(g,blue,red))
-            res.push_back(*g);
+         vector<vector<int> > g;
+          g.push_back(merger(otoczkaa[0],doOtoczki[i1]));
+          g.push_back(merger(otoczkaa[1],doOtoczki[i2]));
+          g.push_back(merger(otoczkaa[2],doOtoczki[i3]));
+          g.push_back(merger(otoczkaa[3],doOtoczki[i4]));
+          if (checkPlanar(&g,blue,red))
+            res.push_back(g);
         }
-
 
       }
     }
@@ -244,6 +244,7 @@ vector<vector<int> > *tworzKoniec(int blue, int red, int otoczka ,long long i,lo
     return new vector<vector <int> >();
 }
 void threadsEnd(){
+
   m.lock();
   cerr<<"end procesu"<<ile<<"\n";
   ile--;
@@ -293,7 +294,7 @@ int main(){
   mn = (all/MAX_THREADS);
   cerr<<mn<<"\n";
   thread allThreads[MAX_THREADS];
-  vector<vector<vector<int> > > const otoczkaa = tworzOtoczke(blue,red,otoczka);
+  vector<vector<vector<int> > >  otoczkaa = tworzOtoczke(blue,red,otoczka);
   while (beg<all){
     allThreads[i] = thread(bind(tworzGraf,blue,red,otoczka,beg,min(beg+mn,all),i, blue-otoczka,otoczkaa));
     beg+=mn+1;
