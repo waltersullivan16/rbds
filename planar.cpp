@@ -223,8 +223,8 @@ vector<vector<vector<int> > > tworzOtoczke(int blue, int red, int otoczka){
 
       }
     }
-  cerr<<"end OTOCZKi "<<res.size()<<"\n";
   }
+  cerr<<"end OTOCZKi "<<res.size()<<"\n";
   return res;
 
 }
